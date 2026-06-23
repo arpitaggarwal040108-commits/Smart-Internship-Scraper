@@ -5,17 +5,23 @@ import time
 import schedule
 
 CSV_FILE = "internships.csv"
+
+
 def scrape_jobs():
     print("\n=================================")
     print("Starting Internship Scraper...")
     print("=================================\n")
 
-    keyword = input("Enter keyword (Python, Data Analyst, ML): ").lower()
+    keyword = input(
+        "Enter keyword (Python, Data Analyst, ML): "
+    ).lower()
 
-    url = "https://internshala.com/internships/"
+    url = f"https://internshala.com/internships/keywords-{keyword}/"
+
     headers = {
         "User-Agent": "Mozilla/5.0"
     }
+
     try:
         print("Fetching webpage...")
 
@@ -29,81 +35,99 @@ def scrape_jobs():
             print(f"Website returned {response.status_code}")
             return
 
+        with open(
+            "page.html",
+            "w",
+            encoding="utf-8"
+        ) as f:
+            f.write(response.text)
+
+        print("HTML saved to page.html")
+
         soup = BeautifulSoup(
             response.text,
             "html.parser"
         )
 
-        jobs = soup.find_all("div", class_="individual_internship")
+        internships = soup.find_all(
+            "div",
+            attrs={"internshipid": True}
+        )
 
-        if not jobs:
-            print("No internships found.")
-            return
+        print("Internship cards found:", len(internships))
 
         results = []
 
-        print(f"Found {len(jobs)} internships")
-        print("Filtering results...\n")
-
-        for job in jobs:
+        for internship in internships:
 
             try:
-                title_tag = job.find("h3")
-
-                title = (
-                    title_tag.get_text(strip=True)
-                    if title_tag
-                    else "Not Available"
+                text = internship.get_text(
+                    " ",
+                    strip=True
                 )
 
-                company_tag = job.find(
-                    "h4",
-                    class_="company-name"
+                if keyword not in text.lower():
+                    continue
+
+                title = text.split("Actively hiring")[0].strip()
+
+                location = "N/A"
+                location_tag = internship.find(
+                    "div",
+                    class_="locations"
                 )
 
-                company = (
-                    company_tag.get_text(strip=True)
-                    if company_tag
-                    else "Not Available"
-                )
-
-                location_tag = job.find(
-                    "a",
-                    class_="location_link"
-                )
-
-                location = (
-                    location_tag.get_text(strip=True)
-                    if location_tag
-                    else "Not Available"
-                )
-
-                date_posted = "Not Available"
-
-                link_tag = job.find("a")
-
-                if link_tag and link_tag.get("href"):
-                    link = (
-                        "https://internshala.com"
-                        + link_tag["href"]
+                if location_tag:
+                    location = location_tag.get_text(
+                        " ",
+                        strip=True
                     )
-                else:
-                    link = "Not Available"
 
-                if keyword in title.lower():
+                stipend = "N/A"
+                stipend_tag = internship.find(
+                    "span",
+                    class_="stipend"
+                )
 
-                    results.append([
-                        title,
-                        company,
-                        location,
-                        date_posted,
-                        link
-                    ])
+                if stipend_tag:
+                    stipend = stipend_tag.get_text(
+                        strip=True
+                    )
+
+                duration = "N/A"
+
+                row_items = internship.find_all(
+                    "div",
+                    class_="row-1-item"
+                )
+
+                if len(row_items) >= 3:
+                    duration = row_items[2].get_text(
+                        " ",
+                        strip=True
+                    )
+
+                link = (
+                    "https://internshala.com"
+                    + internship.get(
+                        "data-href",
+                        ""
+                    )
+                )
+
+                print(f"Matched: {title}")
+
+                results.append([
+                    title,
+                    location,
+                    stipend,
+                    duration,
+                    link
+                ])
 
             except Exception as e:
-                print(
-                    f"Error reading internship: {e}"
-                )
+                print("Error:", e)
+                continue
 
         if len(results) == 0:
             print(
@@ -122,17 +146,18 @@ def scrape_jobs():
 
             writer.writerow([
                 "Title",
-                "Company",
                 "Location",
-                "Date Posted",
+                "Stipend",
+                "Duration",
                 "Link"
             ])
 
             writer.writerows(results)
 
         print(
-            f"\nSaved {len(results)} internships"
+            f"\nSaved {len(results)} matching internships"
         )
+
         print(
             f"CSV File Created: {CSV_FILE}"
         )
@@ -165,9 +190,12 @@ elif choice == "2":
         "09:00"
     ).do(scheduled_job)
 
-    print(
-        "Scheduler running..."
-    )
+    print("\n=================================")
+    print("Scheduler Running")
+    print("=================================")
+    print("Next run: Every day at 09:00 AM")
+    print("Waiting for scheduled tasks...")
+    print("Press Ctrl + C to exit\n")
 
     while True:
         schedule.run_pending()
