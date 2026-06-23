@@ -1,39 +1,18 @@
 # Smart Internship Scraper
 
-A Python-based automation tool that scrapes internship listings from Internshala based on user-defined keywords and exports the results to a CSV file for easy analysis and tracking.
-
----
-
-## Overview
-
-Smart Internship Scraper automates the process of searching for internships by fetching listings directly from Internshala, filtering them according to a keyword, and storing relevant information such as location, stipend, duration, and application links.
-
-This project demonstrates practical skills in:
-
-* Web Scraping
-* Data Extraction
-* Python Automation
-* CSV File Handling
-* Task Scheduling
-* Error Handling
+A Python-based web scraping and automation tool that fetches internship opportunities from Internshala based on user-defined keywords and exports the results into a structured CSV file.
 
 ---
 
 ## Features
 
-✅ Search internships using custom keywords
-
-✅ Extract internship details automatically
-
-✅ Save results in CSV format
-
-✅ Generate direct application links
-
-✅ Daily scheduled scraping support
-
-✅ Handles network errors and timeouts gracefully
-
-✅ Lightweight and beginner-friendly
+* Search internships using custom keywords (Python, Data Analyst, Machine Learning, etc.)
+* Extract internship details automatically
+* Save results to a CSV file
+* Generate direct internship application links
+* Daily scheduler support for automated scraping
+* Network timeout and error handling
+* Lightweight and easy to use
 
 ---
 
@@ -44,6 +23,28 @@ This project demonstrates practical skills in:
 * BeautifulSoup4
 * CSV
 * Schedule
+
+---
+
+## Project Workflow
+
+```text
+User Enters Keyword
+        ↓
+Send HTTP Request to Internshala
+        ↓
+Download Webpage HTML
+        ↓
+Parse HTML using BeautifulSoup
+        ↓
+Extract Internship Listings
+        ↓
+Filter Relevant Results
+        ↓
+Store Data in CSV
+        ↓
+(Optional) Run Automatically Every Day
+```
 
 ---
 
@@ -64,7 +65,7 @@ Smart-Internship-Scraper/
 
 ## Installation
 
-### Clone Repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/Smart-Internship-Scraper.git
@@ -81,13 +82,13 @@ pip install -r requirements.txt
 
 ## Usage
 
-Run the application:
+Run the scraper:
 
 ```bash
 python main.py
 ```
 
-Choose an option:
+Choose one of the available options:
 
 ```text
 1. Run Now
@@ -104,20 +105,14 @@ AI
 Web Development
 ```
 
-The scraper will fetch matching internships and save them to:
-
-```text
-internships.csv
-```
-
 ---
 
-## Sample Output
-
-### Terminal Output
+## Sample Terminal Output
 
 ```text
+=================================
 Starting Internship Scraper...
+=================================
 
 Enter keyword: Data Analyst
 
@@ -131,18 +126,21 @@ Saved 2 matching internships
 CSV File Created: internships.csv
 ```
 
-### CSV Output
+---
 
-| Title                              | Location            | Stipend       | Duration |
-| ---------------------------------- | ------------------- | ------------- | -------- |
-| Teacher for Data Analyst Course    | Delhi (Hybrid)      | ₹12,000/month | 2 Months |
-| MIS Lead Handling And Data Analyst | Mumbai, Navi Mumbai | ₹9,000/month  | 3 Months |
+## Sample CSV Output
+
+```csv
+Title,Location,Stipend,Duration,Link
+Teacher for data analyst course Krutrim Insights,Delhi (Hybrid),₹12,000/month,2 Months,...
+MIS- Lead Handling And Data Analyst BNM Business Solutions LLP,Mumbai,₹9,000/month,3 Months,...
+```
 
 ---
 
 ## Scheduler Mode
 
-The scraper can be configured to run automatically every day.
+The application can automatically run every day using the built-in scheduler.
 
 Example:
 
@@ -150,50 +148,51 @@ Example:
 schedule.every().day.at("09:00").do(scrape_jobs)
 ```
 
-Useful for monitoring new internship opportunities without manual searching.
+This helps users monitor new internship opportunities without manually running the script.
 
 ---
 
 ## Error Handling
 
-The project includes handling for:
+The scraper handles:
 
 * Internet connection failures
 * Request timeouts
-* Invalid responses
-* Unexpected exceptions
-
----
-
-## Future Improvements
-
-* Export results to Excel (.xlsx)
-* Email notifications
-* Internship ranking by relevance
-* Stipend-based filtering
-* Company name extraction
-* Database integration
-* AI-powered internship recommendations
-* Web dashboard using Flask
+* Invalid server responses
+* Unexpected runtime exceptions
 
 ---
 
 ## Learning Outcomes
 
-Through this project, I gained hands-on experience in:
+This project helped develop practical experience in:
 
-* Web scraping using BeautifulSoup
-* HTTP requests using Requests
-* Data storage using CSV
-* Python automation workflows
-* Scheduling recurring tasks
-* Git and GitHub version control
+* Web Scraping
+* HTTP Requests
+* HTML Parsing
+* Data Extraction
+* Python Automation
+* CSV File Handling
+* Task Scheduling
+* Git & GitHub
+
+---
+
+## Future Improvements
+
+* Excel (.xlsx) Export
+* Email Notifications
+* Internship Ranking System
+* Company Name Extraction
+* Database Integration
+* Flask Web Interface
+* AI-Based Internship Recommendations
 
 ---
 
 ## Author
 
-Arpit Aggarwal
+**Arpit Aggarwal**
 
 B.Tech Student | Delhi Technological University (DTU)
 

@@ -32,7 +32,9 @@ def scrape_jobs():
         )
 
         if response.status_code != 200:
-            print(f"Website returned {response.status_code}")
+            print(
+                f"Website returned {response.status_code}"
+            )
             return
 
         with open(
@@ -54,7 +56,9 @@ def scrape_jobs():
             attrs={"internshipid": True}
         )
 
-        print("Internship cards found:", len(internships))
+        print(
+            f"Internship cards found: {len(internships)}"
+        )
 
         results = []
 
@@ -66,12 +70,16 @@ def scrape_jobs():
                     strip=True
                 )
 
-                if keyword not in text.lower():
+                title = text.split(
+                    "Actively hiring"
+                )[0].strip()
+
+                # Filter only using title
+                if keyword not in title.lower():
                     continue
 
-                title = text.split("Actively hiring")[0].strip()
-
                 location = "N/A"
+
                 location_tag = internship.find(
                     "div",
                     class_="locations"
@@ -84,6 +92,7 @@ def scrape_jobs():
                     )
 
                 stipend = "N/A"
+
                 stipend_tag = internship.find(
                     "span",
                     class_="stipend"
@@ -125,8 +134,7 @@ def scrape_jobs():
                     link
                 ])
 
-            except Exception as e:
-                print("Error:", e)
+            except Exception:
                 continue
 
         if len(results) == 0:
@@ -169,7 +177,9 @@ def scrape_jobs():
         print("Request timed out.")
 
     except Exception as e:
-        print(f"Unexpected Error: {e}")
+        print(
+            f"Unexpected Error: {e}"
+        )
 
 
 def scheduled_job():
@@ -182,6 +192,7 @@ print("2. Daily Scheduler")
 choice = input("Choose option: ")
 
 if choice == "1":
+
     scrape_jobs()
 
 elif choice == "2":
