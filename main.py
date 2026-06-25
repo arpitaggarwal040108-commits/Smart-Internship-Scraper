@@ -58,7 +58,6 @@ def scrape_jobs():
                     strip=True
                 )
 
-                # Extract title
                 if "Actively hiring" in text:
                     title = text.split(
                         "Actively hiring"
@@ -66,13 +65,11 @@ def scrape_jobs():
                 else:
                     title = text[:100].strip()
 
-                # Limit title length
                 words = title.split()
 
                 if len(words) > 8:
                     title = " ".join(words[:8])
 
-                # FILTER USING TITLE ONLY
                 search_terms = keyword.split()
 
                 title_lower = title.lower()
