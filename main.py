@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-import csv
-import time
+import pandas as pd
 import schedule
+import time
 
 CSV_FILE = "internships.csv"
 
@@ -14,12 +14,13 @@ def scrape_jobs():
 
     keyword = input(
         "Enter keyword (Python, Data Analyst, ML): "
-    ).lower()
+    ).strip().lower()
 
     url = f"https://internshala.com/internships/keywords-{keyword}/"
 
     headers = {
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
 
     try:
@@ -28,63 +29,64 @@ def scrape_jobs():
         response = requests.get(
             url,
             headers=headers,
-            timeout=10
+            timeout=15
         )
 
-        if response.status_code != 200:
-            print(
-                f"Website returned {response.status_code}"
-            )
-            return
-
-        with open(
-            "page.html",
-            "w",
-            encoding="utf-8"
-        ) as f:
-            f.write(response.text)
-
-        print("HTML saved to page.html")
+        response.raise_for_status()
 
         soup = BeautifulSoup(
             response.text,
             "html.parser"
         )
 
-        internships = soup.find_all(
+        cards = soup.find_all(
             "div",
             attrs={"internshipid": True}
         )
 
         print(
-            f"Internship cards found: {len(internships)}"
+            f"Internship cards found: {len(cards)}"
         )
 
         results = []
 
-        for internship in internships:
+        for card in cards:
 
             try:
-                text = internship.get_text(
+                text = card.get_text(
                     " ",
                     strip=True
                 )
 
-                title = text.split(
-                    "Actively hiring"
-                )[0].strip()
+                # Extract title
+                if "Actively hiring" in text:
+                    title = text.split(
+                        "Actively hiring"
+                    )[0].strip()
+                else:
+                    title = text[:100].strip()
 
-                # Filter only using title
-                if keyword not in title.lower():
+                # Limit title length
+                words = title.split()
+
+                if len(words) > 8:
+                    title = " ".join(words[:8])
+
+                # FILTER USING TITLE ONLY
+                search_terms = keyword.split()
+
+                title_lower = title.lower()
+
+                if not any(
+                    term in title_lower
+                    for term in search_terms
+                ):
                     continue
-
                 location = "N/A"
-
-                location_tag = internship.find(
+                location_tag = card.find(
                     "div",
                     class_="locations"
                 )
-
                 if location_tag:
                     location = location_tag.get_text(
                         " ",
@@ -93,11 +95,10 @@ def scrape_jobs():
 
                 stipend = "N/A"
 
-                stipend_tag = internship.find(
+                stipend_tag = card.find(
                     "span",
                     class_="stipend"
                 )
-
                 if stipend_tag:
                     stipend = stipend_tag.get_text(
                         strip=True
@@ -105,37 +106,43 @@ def scrape_jobs():
 
                 duration = "N/A"
 
-                row_items = internship.find_all(
-                    "div",
-                    class_="row-1-item"
-                )
+                words = text.split()
 
-                if len(row_items) >= 3:
-                    duration = row_items[2].get_text(
-                        " ",
-                        strip=True
-                    )
+                for i in range(len(words)):
+                    if words[i] in [
+                        "Month",
+                        "Months"
+                    ]:
+                        if i > 0:
+                            duration = (
+                                words[i - 1]
+                                + " "
+                                + words[i]
+                            )
+                        break
 
                 link = (
                     "https://internshala.com"
-                    + internship.get(
+                    + card.get(
                         "data-href",
                         ""
                     )
                 )
 
-                print(f"Matched: {title}")
+                print(f"Found: {title}")
 
-                results.append([
-                    title,
-                    location,
-                    stipend,
-                    duration,
-                    link
-                ])
+                results.append({
+                    "Title": title,
+                    "Location": location,
+                    "Stipend": stipend,
+                    "Duration": duration,
+                    "Link": link
+                })
 
-            except Exception:
-                continue
+            except Exception as e:
+                print(
+                    f"Skipped card: {e}"
+                )
 
         if len(results) == 0:
             print(
@@ -143,31 +150,25 @@ def scrape_jobs():
             )
             return
 
-        with open(
+        df = pd.DataFrame(results)
+
+        df.drop_duplicates(
+            subset=["Title", "Link"],
+            inplace=True
+        )
+
+        df.to_csv(
             CSV_FILE,
-            "w",
-            newline="",
+            index=False,
             encoding="utf-8"
-        ) as file:
-
-            writer = csv.writer(file)
-
-            writer.writerow([
-                "Title",
-                "Location",
-                "Stipend",
-                "Duration",
-                "Link"
-            ])
-
-            writer.writerows(results)
-
-        print(
-            f"\nSaved {len(results)} matching internships"
         )
 
         print(
-            f"CSV File Created: {CSV_FILE}"
+            f"\nSaved {len(df)} internships"
+        )
+
+        print(
+            f"CSV Updated: {CSV_FILE}"
         )
 
     except requests.exceptions.ConnectionError:
@@ -177,19 +178,20 @@ def scrape_jobs():
         print("Request timed out.")
 
     except Exception as e:
-        print(
-            f"Unexpected Error: {e}"
-        )
+        print(f"Error: {e}")
 
 
 def scheduled_job():
+    print("\nRunning scheduled scrape...")
     scrape_jobs()
 
 
 print("1. Run Now")
 print("2. Daily Scheduler")
 
-choice = input("Choose option: ")
+choice = input(
+    "Choose option: "
+)
 
 if choice == "1":
 
@@ -204,9 +206,8 @@ elif choice == "2":
     print("\n=================================")
     print("Scheduler Running")
     print("=================================")
-    print("Next run: Every day at 09:00 AM")
-    print("Waiting for scheduled tasks...")
-    print("Press Ctrl + C to exit\n")
+    print("Next Run: Every Day at 09:00 AM")
+    print("Press Ctrl + C to Exit\n")
 
     while True:
         schedule.run_pending()
